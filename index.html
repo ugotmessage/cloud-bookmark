@@ -1,1 +1,15 @@
-PLACEHOLDER
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>Cloud Bookmark v2</title>
+  <link rel="stylesheet" href="style-v2.css">
+</head>
+<body>
+<section class="mobile"><header class="mhead"><div class="brandrow"><h1>書籤</h1><button class="icon" data-theme>◐</button></div><label class="search">⌕<input id="ms" placeholder="搜尋書籤、網址或資料夾…"></label></header><main class="main"><div id="msearch" class="hidden"></div><div id="mbrowse"><section id="mfav" class="folder fav"></section><div class="label"><span>資料夾</span><button class="linkbtn" data-newfolder>＋ 新增</button></div><div id="mfolders"></div></div></main><button class="fab" data-add>＋</button></section>
+<section class="desk"><aside class="side"><div class="logo"><div class="mark">B</div><div><b>Cloud Bookmark</b><small>Personal library</small></div></div><label class="search dsearch">⌕<input id="ds" placeholder="搜尋"><small>⌘K</small></label><nav id="nav" class="nav"></nav><div class="slabel"><span>資料夾</span><button class="icon" data-newfolder>＋</button></div><nav id="dfolders" class="folders"></nav><div class="foot"><button data-theme>◐ 配色主題</button></div></aside><main class="dmain"><header class="top"><div><small id="deye">LIBRARY</small><h1 id="dtitle">全部書籤</h1></div><div class="topright"><div class="toggle"><button data-layout="grid" class="active">▦</button><button data-layout="list">☷</button></div><button class="btn primary" data-add>＋ 新增書籤</button></div></header><section id="content" class="content"></section></main></section>
+<div id="bg" class="modalbg hidden"></div><section id="modal" class="modal hidden"><h2 id="mtitle">新增書籤</h2><input id="mid" type="hidden"><label class="field"><span>網址</span><input id="url" type="url" placeholder="https://example.com"></label><label class="field"><span>名稱</span><input id="name" placeholder="書籤名稱"></label><label class="field"><span>資料夾</span><input id="folder" list="folderlist" placeholder="資料夾"></label><datalist id="folderlist"></datalist><div class="mact"><button class="btn ghost" data-close>取消</button><button class="btn primary" id="save">儲存</button></div></section><div id="menu" class="menu hidden"></div><section id="themes" class="theme-panel hidden"><h2>配色主題</h2><p>選擇常見的 UI 配色，並設定跟隨系統、淺色或深色。</p><div id="themeModes" class="theme-modes"></div><div id="paletteGrid" class="palette-grid"></div><button class="theme-close" data-theme-close>完成</button></section>
+<script src="app-v2.js"></script>
+</body>
+</html>
