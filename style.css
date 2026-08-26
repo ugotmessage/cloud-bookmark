@@ -1,0 +1,526 @@
+/* Reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* 全域樣式 */
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background-color: #f4f4f4; /* 更柔和的背景色 */
+  color: #333;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+header {
+  background-color: #6c5da38d;
+  color: white;
+  padding: 1.5rem;
+  text-align: center;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  /*border-bottom-left-radius: 20px;
+  border-bottom-right-radius: 20px;*/
+}
+
+.header-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.search-container {
+  display: flex;
+  gap: 1rem;
+}
+
+#searchInput,
+#tokenInput {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.9);
+  min-width: 200px;
+}
+
+#searchInput:focus,
+#tokenInput:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5);
+}
+
+.main-content {
+  padding: 2rem;
+  max-width: 800px;
+  margin: 2rem auto;
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  color: white;
+}
+
+/* 按鈕樣式 */
+.btn {
+    display: inline-flex;  /* 改為 inline-flex */
+    align-items: center;   /* 垂直置中對齊 */
+    gap: 4px;             /* 圖示和文字之間的間距 */
+    padding: 0.8rem 1.5rem;
+    font-size: 1rem;
+    border: none;
+    cursor: pointer;
+    border-radius: 12px;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* 調整 Material Icons 的垂直對齊 */
+.btn .material-icons {
+    font-size: 20px;      /* 設定圖示大小 */
+    line-height: 1;       /* 移除額外的行高 */
+    display: inline-block;
+    vertical-align: middle;/* 確保圖示垂直置中 */
+}
+
+.btn-primary {
+  background-color: #6841ea;
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #005bb5;
+  box-shadow: 0 6px 12px rgba(0, 122, 255, 0.3);
+}
+
+.btn-secondary {
+  background-color: #e5e5e5;
+  color: #333;
+}
+
+.btn-secondary:hover {
+  background-color: #d4d4d4;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 小型按鈕 */
+.btn-small {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.85rem;
+    border-radius: 8px;
+}
+
+/* 危險按鈕 */
+.btn-danger {
+    background-color: #ff3b30;
+    color: white;
+}
+
+.btn-danger:hover {
+    background-color: #d32f2f;
+    box-shadow: 0 4px 8px rgba(255, 59, 48, 0.3);
+}
+
+/* 表單樣式 */
+  .bookmark-form {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  }
+
+  .bookmark-form input,
+.bookmark-form select {
+  padding: 0.8rem;
+  font-size: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  flex: 1;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  }
+
+.bookmark-form input:focus,
+.bookmark-form select:focus {
+  border-color: #007aff;
+  outline: none;
+  box-shadow: 0 0 6px rgba(0, 122, 255, 0.3);
+}
+
+/* 書籤列表 */
+.bookmark-list {
+  margin-top: 1rem;
+}
+
+.folder {
+  margin-bottom: 1.5rem;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 修改資料夾標題區域的樣式 */
+.folder-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+    background-color: #f9f9f9;
+    padding: 1rem;
+    border-bottom: 1px solid #ddd;
+  user-select: none; /* 防止文字被選中 */
+}
+
+.folder h3 {
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+}
+
+.folder h3:hover {
+  background-color: #e9e9e9;
+}
+
+.folder ul {
+  list-style: none;
+  padding: 1rem;
+}
+
+.folder ul.hidden {
+  display: none;
+}
+
+.folder ul li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.8rem;
+  border-bottom: 1px solid #f1f1f1;
+}
+
+.folder ul li:last-child {
+  border-bottom: none;
+}
+
+.bookmark-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  user-select: none; /* 防止文字被選中 */
+}
+
+.bookmark-left {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.folder ul li .bookmark-name {
+  font-size: 1rem;
+  color: #007aff;
+  margin-left: 4px; /* 為把手留出空間 */
+}
+
+.folder-actions,
+.bookmark-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+/* 在 .bookmark-actions 樣式後面添加 */
+.bookmark-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+/* 移動按鈕的特殊樣式 */
+.btn-move {
+  background-color: #34c759;  /* 使用綠色來表示移動操作 */
+  color: white;
+}
+
+.btn-move:hover {
+  background-color: #28a745;
+  box-shadow: 0 4px 8px rgba(52, 199, 89, 0.3);
+}
+
+/* 移動選單的樣式 */
+.move-menu {
+  position: absolute;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 0.5rem;
+  z-index: 100;
+  min-width: 150px;
+}
+
+.move-menu button {
+  display: block;
+  width: 100%;
+  padding: 0.5rem 1rem;
+  text-align: left;
+  background: none;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #333;
+  transition: background-color 0.2s ease;
+}
+
+.move-menu button:hover {
+  background-color: #f0f0f0;
+  }
+
+/* 修改拖曳相關的樣式 */
+[draggable="true"] {
+  cursor: move;
+  user-select: none;
+  }
+
+.folder {
+    position: relative;
+    cursor: default;
+}
+
+.folder-header {
+    position: relative;
+    z-index: 1;
+}
+
+.folder.dragging {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.folder.drag-over {
+    border: 2px dashed #007aff;
+    background-color: rgba(0, 122, 255, 0.05);
+}
+
+.folder ul li.dragging {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.folder ul.drag-over {
+    background-color: rgba(0, 122, 255, 0.05);
+    border: 2px dashed #007aff;
+    border-radius: 8px;
+}
+
+/* 拖曳把手樣式 */
+.drag-handle {
+    cursor: move;
+    padding: 4px 8px;
+    margin-right: 8px;
+    border-radius: 4px;
+    color: #999;
+    transition: all 0.2s ease;
+    user-select: none;
+    touch-action: none;
+}
+
+.drag-handle:hover {
+    background-color: #f0f0f0;
+    color: #666;
+}
+
+/* 模態視窗 */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  padding: 2rem;
+  border-radius: 20px;
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+}
+
+.modal.hidden {
+  display: none;
+}
+
+.modal h2 {
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
+  color: #333;
+}
+
+.modal input {
+  width: 100%;
+  padding: 0.8rem;
+  font-size: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  margin-bottom: 1rem;
+}
+
+.modal input:focus {
+  border-color: #007aff;
+  outline: none;
+  box-shadow: 0 0 6px rgba(0, 122, 255, 0.3);
+}
+
+.modal button {
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+  .bookmark-form {
+    flex-direction: column;
+  }
+
+  .bookmark-form input,
+  .bookmark-form select,
+  .bookmark-form button {
+    width: 100%;
+  }
+}
+
+/* Google 風格搜尋框 */
+.search-container {
+    flex: 1;
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 1rem 0;
+  }
+  
+  .search-box {
+    display: flex;
+    align-items: center;
+    padding: 0.8rem 1.5rem;
+    border: 1px solid #dfe1e5;
+    /*border-radius: 24px;*/
+    width: 100%;
+    transition: all 0.3s ease;
+    background: #fff;
+    position: relative;
+  }
+  
+  .search-box:hover,
+  .search-box:focus-within {
+    box-shadow: 0 1px 6px rgba(32,33,36,0.28);
+    border-color: rgba(223,225,229,0);
+  }
+  
+  .search-suggestions {
+    border: 1px solid #000;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border-radius: 0 0 24px 24px;
+    box-shadow: 0 4px 6px rgba(32,33,36,0.28);
+    margin-top: -1px;
+    display: none;
+    z-index: 1000;
+    max-height: 400px;
+    overflow-y: auto;
+  }
+  
+  .search-suggestions.active {
+    display: block;
+  }
+  
+  .suggestion-item {
+    padding: 0.8rem 1.5rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  
+  .suggestion-item:hover {
+    background-color: #f8f9fa;
+  }
+  
+  .suggestion-item .material-icons {
+    color: #9aa0a6;
+    font-size: 1.2rem;
+  }
+  
+  .suggestion-text {
+    flex: 1;
+    color: #202124!important;;
+  }
+  
+  .suggestion-folder {
+    color: #5f6368;
+    font-size: 0.9rem;
+  }
+
+  /* 在文件末尾添加以下樣式 */
+
+.suggestion-title {
+    font-weight: bold;
+    color: #1a73e8;
+}
+
+.suggestion-url {
+    color: #202124;
+    font-size: 0.9em;
+    margin-top: 2px;
+}
+
+.suggestion-folder-info {
+    color: #5f6368;
+    font-size: 0.8em;
+    margin-top: 2px;
+}
+
+.suggestion-item {
+    padding: 8px 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.suggestion-item:hover {
+    background-color: #f8f9fa;
+}
+
+.suggestion-item .material-icons {
+    color: #1a73e8;
+    margin-top: 2px;
+}
+
+.suggestion-text {
+    flex: 1;
+    overflow: hidden;
+}
+
+.suggestion-title,
+.suggestion-url {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}

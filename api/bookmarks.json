@@ -1,0 +1,18 @@
+{
+    "bookmarks": [
+        {
+            "name": "Google",
+            "url": "https://www.google.com",
+            "folder": "未分類"
+        },
+        {
+            "name": "GitHub",
+            "url": "https://github.com",
+            "folder": "未分類"
+        }
+    ],
+    "folderOrder": [
+        "未分類"
+    ],
+    "token": "demo-token"
+}
