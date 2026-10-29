@@ -9,7 +9,7 @@ async function userId(ctx){
       if(identity?.sub)return String(identity.sub);
     }
   }catch(e){console.warn('Access identity lookup failed',e)}
-  return 'preview-user';
+  return null;
 }
 
 function validState(body){
@@ -57,6 +57,7 @@ export default {
     if(!env.DB)return json({error:'D1 binding DB is not configured'},503);
 
     const user=await userId(ctx);
+    if(!user)return json({error:'Authentication required'},401);
     try{
       if(request.method==='GET')return json(await readState(env.DB,user));
       if(request.method==='PUT'){
