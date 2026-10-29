@@ -1,7 +1,7 @@
 const JSON_HEADERS={'content-type':'application/json; charset=utf-8','cache-control':'no-store'};
 const json=(body,status=200)=>new Response(JSON.stringify(body),{status,headers:JSON_HEADERS});
 
-async function userId(ctx){
+async function accessIdentity(ctx){
   try{
     if(ctx.access){
       const identity=await ctx.access.getIdentity();
@@ -10,6 +10,17 @@ async function userId(ctx){
     }
   }catch(e){console.warn('Access identity lookup failed',e)}
   return null;
+}
+
+async function scopeId(url){
+  const token=url.searchParams.get('token')||'';
+  const book=url.searchParams.get('book')||'main';
+  if(token.length<20||token.length>256)return null;
+  if(book.length<1||book.length>80)return null;
+  const data=new TextEncoder().encode(`${token}\n${book}`);
+  const digest=await crypto.subtle.digest('SHA-256',data);
+  const hex=[...new Uint8Array(digest)].map(b=>b.toString(16).padStart(2,'0')).join('');
+  return `token:${hex}`;
 }
 
 function validState(body){
@@ -98,15 +109,17 @@ export default {
     if(url.pathname!=='/api/state')return json({error:'Not found'},404);
     if(!env.DB)return json({error:'D1 binding DB is not configured'},503);
 
-    const user=await userId(ctx);
-    if(!user)return json({error:'Authentication required'},401);
+    const identity=await accessIdentity(ctx);
+    if(!identity)return json({error:'Authentication required'},401);
+    const scope=await scopeId(url);
+    if(!scope)return json({error:'A valid token and book are required'},400);
     try{
       await ensureSchema(env.DB);
-      if(request.method==='GET')return json(await readState(env.DB,user));
+      if(request.method==='GET')return json(await readState(env.DB,scope));
       if(request.method==='PUT'){
         const body=await request.json().catch(()=>null);
         if(!validState(body))return json({error:'Invalid state payload'},400);
-        return json(await writeState(env.DB,user,body));
+        return json(await writeState(env.DB,scope,body));
       }
       return json({error:'Method not allowed'},405);
     }catch(error){
