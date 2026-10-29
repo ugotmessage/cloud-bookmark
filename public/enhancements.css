@@ -33,3 +33,117 @@
  .row .drag-handle{display:inline-block}.theme-mask{align-items:center}.theme-panel{border-radius:16px;max-width:440px}.theme-grid{grid-template-columns:repeat(3,1fr)}
  .nav[data-folder] .drag-handle{display:inline-block;margin-right:-4px}
 }
+
+/* SortableJS drag feedback */
+.sortable-ghost{
+  opacity:.18!important;
+  background:var(--acbg)!important;
+  border:2px dashed var(--ac)!important;
+  box-shadow:none!important;
+}
+.sortable-chosen{
+  box-shadow:0 10px 28px #0003!important;
+  transform:scale(1.015);
+}
+.sortable-drag{
+  opacity:.96!important;
+  background:var(--bg)!important;
+  border:1px solid var(--ac)!important;
+  border-radius:10px;
+  box-shadow:0 18px 42px #0005!important;
+  transform:rotate(.6deg) scale(1.02)!important;
+}
+.drop-indicator{
+  position:fixed;
+  z-index:120;
+  pointer-events:none;
+  background:var(--ac);
+  border-radius:999px;
+  box-shadow:0 0 0 1px color-mix(in srgb,var(--ac) 15%,transparent),0 2px 8px color-mix(in srgb,var(--ac) 35%,transparent);
+}
+.drop-indicator::before{
+  content:"";
+  position:absolute;
+  width:9px;height:9px;
+  border-radius:50%;
+  background:var(--ac);
+  left:-3px;top:50%;
+  transform:translateY(-50%);
+}
+.drop-indicator.vertical::before{
+  left:50%;top:-3px;
+  transform:translateX(-50%);
+}
+.mobile-bookmark-sortable{
+  min-height:12px;
+  padding:1px 0 4px;
+}
+body.sorting-bookmark .mobile-bookmark-sortable{
+  min-height:40px;
+}
+.folder-nav{position:relative;cursor:pointer}
+.folder-label{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.folder-handle{
+  color:var(--tx2);
+  cursor:grab;
+  user-select:none;
+  touch-action:none;
+  margin-right:-2px;
+  position:relative;
+  z-index:8;
+}
+.folder-drop-host{
+  display:none;
+}
+body.sorting-bookmark .folder-nav{
+  border:1px dashed color-mix(in srgb,var(--ac) 28%,var(--bd));
+  transition:background .14s,border-color .14s,transform .14s;
+}
+body.sorting-bookmark .folder-drop-host{
+  display:block;
+  position:absolute;
+  inset:0;
+  z-index:7;
+  border-radius:8px;
+  min-height:100%;
+}
+body.sorting-bookmark .folder-nav:has(.folder-drop-host .sortable-folder-drop-ghost),
+body.sorting-bookmark .folder-nav:has(.folder-drop-host .sortable-ghost){
+  background:var(--acbg)!important;
+  border-color:var(--ac);
+  box-shadow:inset 0 0 0 1px var(--ac);
+  transform:translateX(3px);
+}
+body.sorting-bookmark .folder-nav:has(.folder-drop-host .sortable-folder-drop-ghost)::after,
+body.sorting-bookmark .folder-nav:has(.folder-drop-host .sortable-ghost)::after{
+  content:"移動到這裡";
+  position:absolute;
+  right:8px;
+  top:50%;
+  transform:translateY(-50%);
+  z-index:9;
+  padding:3px 6px;
+  border-radius:6px;
+  background:var(--ac);
+  color:#fff;
+  font-size:10px;
+  font-weight:700;
+}
+.sortable-folder-ghost{
+  opacity:.22;
+  background:var(--acbg)!important;
+  outline:2px dashed var(--ac);
+}
+.sortable-folder-drop-ghost{
+  width:100%!important;
+  min-height:34px!important;
+  opacity:.08!important;
+  pointer-events:none!important;
+}
+body.sorting-folder .folder-nav:not(.sortable-chosen){
+  transition:transform .18s;
+}
+@media(max-width:767px){
+  .sortable-chosen{box-shadow:0 8px 22px #0003!important}
+  .sortable-drag{border-radius:10px}
+}
