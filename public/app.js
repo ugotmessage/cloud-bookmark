@@ -135,10 +135,10 @@ function favById(id){const m=markById(id);if(!m)return;m.fav=m.fav?0:1;persist()
 function setQ(v){S.q=v;render()}
 function setView(v){S.view=v;persist({sync:false});render()}
 function setCur(c){S.cur=c;render()}
-function toggle(f){S.open.has(f)?S.open.delete(f):S.open.add(f);renderMobile()}
+function toggle(f){S.open.has(f)?S.open.delete(f):S.open.add(f);renderMobile();queueSortableInit()}
 
 function mobileRow(m){
-  return `<div class="row" data-id="${esc(m.id)}" data-folder="${esc(m.f)}">
+  return `<div class="row sortable-item" data-id="${esc(m.id)}" data-folder="${esc(m.f)}">
     ${icon(m)}<div class="t" onclick="goById('${esc(m.id)}')"><b>${esc(m.n)}</b><small>${esc(m.u)}</small></div>
     <button class="star ${m.fav?'on':''}" onclick="favById('${esc(m.id)}')">${m.fav?'★':'☆'}</button>
     <button class="more" onclick="openMarkMenu('${esc(m.id)}',this,event)">⋯</button>
@@ -153,20 +153,23 @@ function renderMobile(){
   S.folders.forEach(f=>{
     const list=inF(f),open=S.open.has(f);
     h+=`<button class="fold ${open?'open':''}" data-folder="${esc(f)}" onclick="toggle('${esc(f)}')">📁 ${esc(f)}<span class="n">${list.length}</span><span class="ch">›</span></button>`;
-    if(open)h+=list.map(mobileRow).join('')||'<div class="empty">空資料夾</div>';
+    if(open)h+=`<div class="bookmark-sortable mobile-bookmark-sortable" data-folder="${esc(f)}">${list.map(mobileRow).join('')||'<div class="empty sortable-empty">空資料夾</div>'}</div>`;
   });
   const none=S.marks.filter(m=>!m.f&&hit(m));
   if(none.length){
     const f='未分類',open=S.open.has(f);
     h+=`<button class="fold ${open?'open':''}" onclick="toggle('${f}')">📁 ${f}<span class="n">${none.length}</span><span class="ch">›</span></button>`;
-    if(open)h+=none.map(mobileRow).join('');
+    if(open)h+=`<div class="bookmark-sortable mobile-bookmark-sortable" data-folder="">${none.map(mobileRow).join('')||'<div class="empty sortable-empty">空資料夾</div>'}</div>`;
   }
   $('m').innerHTML=h;
 }
 function focusMobileSearch(){const q=$('mq');q?.focus()}
 
 function nav(k,l,n,ic,folder=''){
-  return `<button class="nav ${S.cur===k?'act':''}" ${folder?`data-folder="${esc(folder)}"`:''} ${folder?'ondragover="dragOverFolder(event)" ondrop="dropFolder(event)" draggable="true" ondragstart="dragFolderStart(event)"':''} onclick="setCur('${esc(k)}')">${folder?'<span class="drag-handle" title="拖曳排序">⋮⋮</span>':''}${ic} ${esc(l)}<span class="n">${n}</span></button>`;
+  if(folder){
+    return `<div class="nav folder-nav sortable-folder-item ${S.cur===k?'act':''}" data-folder="${esc(folder)}" role="button" tabindex="0" onclick="setCur('${esc(k)}')"><span class="folder-handle" title="拖曳資料夾">⋮⋮</span><span>${ic}</span><span class="folder-label">${esc(l)}</span><span class="n">${n}</span><div class="folder-drop-host" data-folder="${esc(folder)}"></div></div>`;
+  }
+  return `<button class="nav ${S.cur===k?'act':''}" onclick="setCur('${esc(k)}')">${ic} ${esc(l)}<span class="n">${n}</span></button>`;
 }
 function filteredDesktop(){
   let list=S.marks.filter(hit),title='全部書籤';
@@ -185,10 +188,10 @@ function renderDesktop(){
   $('vl').className=S.view==='list'?'on':'';$('vg').className=S.view==='grid'?'on':'';
   if(!list.length){$('dcontent').innerHTML='<div class="empty">沒有符合的書籤</div>';return}
   $('dcontent').innerHTML=S.view==='grid'
-   ?`<div class="grid">${list.map(m=>`<div class="card" data-id="${esc(m.id)}" data-folder="${esc(m.f)}" ondragover="dragOverMark(event)" ondrop="dropMark(event)"><button class="star ${m.fav?'on':''}" onclick="event.stopPropagation();favById('${esc(m.id)}')">${m.fav?'★':'☆'}</button><button class="more" onclick="openMarkMenu('${esc(m.id)}',this,event)">⋯</button>${icon(m)}<div onclick="goById('${esc(m.id)}')" style="cursor:pointer"><b>${esc(m.n)}</b><small>${esc(m.u)}</small></div><span class="drag-handle" draggable="true" ondragstart="dragMarkStart(event,'${esc(m.id)}')">⋮⋮</span></div>`).join('')}</div>`
-   :`<table><tr><th>名稱</th><th>網址</th><th>資料夾</th><th>加入日期</th><th></th></tr>${list.map(m=>`<tr data-id="${esc(m.id)}" data-folder="${esc(m.f)}" ondragover="dragOverMark(event)" ondrop="dropMark(event)"><td><span class="drag-handle table-drag" draggable="true" ondragstart="dragMarkStart(event,'${esc(m.id)}')">⋮⋮</span>${icon(m)}<button onclick="goById('${esc(m.id)}')">${esc(m.n)}</button></td><td>${esc(m.u)}</td><td>${esc(m.f||'-')}</td><td>${esc(m.d)}</td><td class="table-actions"><button class="star ${m.fav?'on':''}" onclick="favById('${esc(m.id)}')">${m.fav?'★':'☆'}</button><button class="more" onclick="openMarkMenu('${esc(m.id)}',this,event)">⋯</button></td></tr>`).join('')}</table>`;
+   ?`<div class="grid bookmark-sortable desktop-bookmark-sortable">${list.map(m=>`<div class="card sortable-item" data-id="${esc(m.id)}" data-folder="${esc(m.f)}"><button class="star ${m.fav?'on':''}" onclick="event.stopPropagation();favById('${esc(m.id)}')">${m.fav?'★':'☆'}</button><button class="more" onclick="openMarkMenu('${esc(m.id)}',this,event)">⋯</button>${icon(m)}<div onclick="goById('${esc(m.id)}')" style="cursor:pointer"><b>${esc(m.n)}</b><small>${esc(m.u)}</small></div><span class="drag-handle" title="拖曳排序">⋮⋮</span></div>`).join('')}</div>`
+   :`<table><thead><tr><th>名稱</th><th>網址</th><th>資料夾</th><th>加入日期</th><th></th></tr></thead><tbody class="bookmark-sortable desktop-bookmark-sortable">${list.map(m=>`<tr class="sortable-item" data-id="${esc(m.id)}" data-folder="${esc(m.f)}"><td><span class="drag-handle table-drag" title="拖曳排序">⋮⋮</span>${icon(m)}<button onclick="goById('${esc(m.id)}')">${esc(m.n)}</button></td><td>${esc(m.u)}</td><td>${esc(m.f||'-')}</td><td>${esc(m.d)}</td><td class="table-actions"><button class="star ${m.fav?'on':''}" onclick="favById('${esc(m.id)}')">${m.fav?'★':'☆'}</button><button class="more" onclick="openMarkMenu('${esc(m.id)}',this,event)">⋯</button></td></tr>`).join('')}</tbody></table>`;
 }
-function render(){renderMobile();renderDesktop()}
+function render(){renderMobile();renderDesktop();queueSortableInit()}
 
 function openSheet(id=null){
   editId=id;const m=id?markById(id):null;
@@ -225,13 +228,147 @@ function moveMark(id){const m=markById(id);if(!m)return;const choices=['未分�
 function moveStep(id,dir){const m=markById(id);if(!m)return;const same=S.marks.filter(x=>x.f===m.f),i=same.findIndex(x=>x.id===id),target=same[i+dir];if(!target)return;const from=S.marks.findIndex(x=>x.id===id),[item]=S.marks.splice(from,1);let to=S.marks.findIndex(x=>x.id===target.id);if(dir>0)to++;S.marks.splice(to,0,item);persist();render()}
 function deleteMark(id){const m=markById(id);if(!m||!confirm(`刪除「${m.n}」？`))return;S.marks=S.marks.filter(x=>x.id!==id);persist();render()}
 
-function dragMarkStart(event,id){dragState={type:'mark',id};event.dataTransfer.effectAllowed='move';event.dataTransfer.setData('text/plain','mark:'+id);event.target.closest('[data-id]')?.classList.add('dragging')}
-function dragOverMark(event){if(dragState?.type!=='mark')return;event.preventDefault();event.currentTarget.classList.add('drag-over')}
-function dropMark(event){if(dragState?.type!=='mark')return;event.preventDefault();const targetId=event.currentTarget.dataset.id;if(targetId&&targetId!==dragState.id){const from=S.marks.findIndex(x=>x.id===dragState.id),[item]=S.marks.splice(from,1),target=S.marks.find(x=>x.id===targetId);item.f=target.f;const to=S.marks.findIndex(x=>x.id===targetId);S.marks.splice(to,0,item);persist();render()}dragState=null}
-function dragFolderStart(event){const folder=event.currentTarget.dataset.folder;dragState={type:'folder',folder};event.dataTransfer.effectAllowed='move';event.dataTransfer.setData('text/plain','folder:'+folder);event.currentTarget.classList.add('dragging')}
-function dragOverFolder(event){if(!dragState)return;event.preventDefault();event.currentTarget.classList.add('drag-over')}
-function dropFolder(event){event.preventDefault();const folder=event.currentTarget.dataset.folder;if(dragState?.type==='folder'){const from=S.folders.indexOf(dragState.folder);if(from>=0&&folder!==dragState.folder){const [moved]=S.folders.splice(from,1),to=S.folders.indexOf(folder);S.folders.splice(to,0,moved);persist();render()}}else if(dragState?.type==='mark'){const m=markById(dragState.id);if(m){m.f=folder;persist();render()}}dragState=null}
-document.addEventListener('dragend',()=>{document.querySelectorAll('.dragging,.drag-over').forEach(x=>x.classList.remove('dragging','drag-over'));dragState=null});
+let sortableInstances=[],sortableFrame=null,dropIndicator=null;
+
+function queueSortableInit(){
+  cancelAnimationFrame(sortableFrame);
+  sortableFrame=requestAnimationFrame(initSortables);
+}
+function destroySortables(){
+  sortableInstances.forEach(instance=>{try{instance.destroy()}catch{}});
+  sortableInstances=[];
+  hideDropIndicator();
+}
+function ensureDropIndicator(){
+  if(dropIndicator)return dropIndicator;
+  dropIndicator=document.createElement('div');
+  dropIndicator.className='drop-indicator';
+  document.body.appendChild(dropIndicator);
+  return dropIndicator;
+}
+function hideDropIndicator(){if(dropIndicator)dropIndicator.hidden=true}
+function showDropIndicator(related,after,container){
+  if(!related)return hideDropIndicator();
+  const line=ensureDropIndicator(),r=related.getBoundingClientRect(),grid=container?.classList.contains('grid');
+  line.hidden=false;
+  if(grid){
+    line.classList.add('vertical');
+    line.style.left=(after?r.right:r.left-1)+'px';
+    line.style.top=r.top+'px';
+    line.style.width='3px';
+    line.style.height=r.height+'px';
+  }else{
+    line.classList.remove('vertical');
+    line.style.left=r.left+'px';
+    line.style.top=(after?r.bottom-1:r.top-1)+'px';
+    line.style.width=r.width+'px';
+    line.style.height='3px';
+  }
+}
+function visibleIds(container){return [...container.querySelectorAll(':scope > .sortable-item')].map(el=>el.dataset.id).filter(Boolean)}
+function reorderSubset(ids){
+  if(ids.length<2)return;
+  const set=new Set(ids),map=new Map(S.marks.map(m=>[m.id,m])),ordered=ids.map(id=>map.get(id)).filter(Boolean);
+  let p=0;
+  S.marks=S.marks.map(m=>set.has(m.id)?ordered[p++]:m);
+}
+function applyFolderContainerOrder(container){
+  const folder=container.dataset.folder||'',ids=visibleIds(container);
+  const folderMarks=S.marks.filter(m=>m.f===folder);
+  if(ids.length!==folderMarks.length)return reorderSubset(ids);
+  const map=new Map(folderMarks.map(m=>[m.id,m])),ordered=ids.map(id=>map.get(id)).filter(Boolean);
+  let p=0;
+  S.marks=S.marks.map(m=>m.f===folder?ordered[p++]:m);
+}
+function sortableStart(evt){
+  document.body.classList.add('sorting-bookmark');
+  evt.item?.classList.add('is-drag-source');
+}
+function sortableEnd(evt){
+  document.body.classList.remove('sorting-bookmark');
+  evt.item?.classList.remove('is-drag-source');
+  hideDropIndicator();
+}
+function initSortables(){
+  destroySortables();
+  if(typeof Sortable==='undefined')return;
+  const mobile=innerWidth<768;
+  const containers=[...document.querySelectorAll(mobile?'.mobile-bookmark-sortable':'.desktop-bookmark-sortable')];
+  containers.forEach(container=>{
+    sortableInstances.push(new Sortable(container,{
+      group:{name:'bookmarks',pull:true,put:true},
+      draggable:'.sortable-item',
+      handle:mobile?undefined:'.drag-handle',
+      animation:180,
+      easing:'cubic-bezier(.2,.8,.2,1)',
+      ghostClass:'sortable-ghost',
+      chosenClass:'sortable-chosen',
+      dragClass:'sortable-drag',
+      forceFallback:true,
+      fallbackOnBody:true,
+      fallbackTolerance:4,
+      delay:mobile?180:0,
+      delayOnTouchOnly:true,
+      touchStartThreshold:4,
+      emptyInsertThreshold:28,
+      onStart:sortableStart,
+      onMove:evt=>{showDropIndicator(evt.related,evt.willInsertAfter,evt.to);return true},
+      onAdd:evt=>{
+        const moved=markById(evt.item.dataset.id);
+        if(moved&&evt.to.classList.contains('mobile-bookmark-sortable'))moved.f=evt.to.dataset.folder||'';
+        if(evt.from?.classList.contains('mobile-bookmark-sortable'))applyFolderContainerOrder(evt.from);
+        if(evt.to.classList.contains('mobile-bookmark-sortable'))applyFolderContainerOrder(evt.to);else reorderSubset(visibleIds(evt.to));
+        persist();sortableEnd(evt);render();
+      },
+      onUpdate:evt=>{
+        if(evt.to.classList.contains('mobile-bookmark-sortable'))applyFolderContainerOrder(evt.to);
+        else reorderSubset(visibleIds(evt.to));
+        persist();sortableEnd(evt);render();
+      },
+      onEnd:evt=>sortableEnd(evt)
+    }));
+  });
+
+  if(!mobile){
+    const folders=$('dfold');
+    if(folders){
+      sortableInstances.push(new Sortable(folders,{
+        draggable:'.sortable-folder-item',
+        handle:'.folder-handle',
+        animation:180,
+        ghostClass:'sortable-folder-ghost',
+        chosenClass:'sortable-chosen',
+        forceFallback:true,
+        fallbackOnBody:true,
+        onStart:()=>document.body.classList.add('sorting-folder'),
+        onEnd:()=>{
+          document.body.classList.remove('sorting-folder');
+          S.folders=[...folders.querySelectorAll(':scope > .sortable-folder-item')].map(el=>el.dataset.folder).filter(Boolean);
+          persist();render();
+        }
+      }));
+    }
+    document.querySelectorAll('.folder-drop-host').forEach(host=>{
+      sortableInstances.push(new Sortable(host,{
+        group:{name:'bookmarks',pull:false,put:true},
+        sort:false,
+        draggable:'.sortable-item',
+        forceFallback:true,
+        ghostClass:'sortable-folder-drop-ghost',
+        onAdd:evt=>{
+          const moved=markById(evt.item.dataset.id),folder=host.dataset.folder;
+          if(moved&&folder){
+            moved.f=folder;
+            persist();
+            toast(`已移動到「${folder}」`);
+          }
+          sortableEnd(evt);render();
+        }
+      }));
+    });
+  }
+}
+window.addEventListener('resize',()=>queueSortableInit());
 
 function createThemePanel(){
   let mask=document.getElementById('themeMask');if(mask)return mask;
