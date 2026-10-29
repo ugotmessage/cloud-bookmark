@@ -11,23 +11,26 @@
 </head>
 <body>
   <section class="mobile-shell">
-    <header class="mobile-header">
-      <div class="mobile-titlebar">
+    <main class="mobile-main">
+      <header class="mobile-titlebar">
         <h1>雲端書籤</h1>
         <div class="mobile-tools">
-          <button class="icon-btn" type="button" data-theme title="配色主題">◐</button>
-          <button class="icon-btn" type="button" data-mobile-menu title="更多">⋮</button>
+          <button class="plain-icon" type="button" data-focus-search aria-label="搜尋">⌕</button>
+          <button class="plain-icon" type="button" data-mobile-menu aria-label="更多">⋮</button>
         </div>
-      </div>
-      <label class="search"><span>⌕</span><input id="mobileSearch" autocomplete="off" placeholder="搜尋書籤、網址或資料夾…"></label>
-    </header>
+      </header>
 
-    <main class="mobile-main">
+      <label class="search"><span>⌕</span><input id="mobileSearch" autocomplete="off" placeholder="搜尋書籤…"></label>
+
       <section id="mobileSearchResults" class="hidden"></section>
       <section id="mobileBrowse">
-        <div class="section-heading"><span>★</span> 我的最愛</div>
+        <div class="section-heading"><span class="favorite-mark">★</span><span>我的最愛</span></div>
         <div id="favoriteRail" class="favorite-rail"></div>
-        <div class="section-heading folder-heading"><span>資料夾</span><button class="text-btn" type="button" data-new-folder>＋ 新增</button></div>
+
+        <div class="section-heading folder-heading">
+          <span>資料夾</span>
+          <button class="text-btn" type="button" data-new-folder>＋</button>
+        </div>
         <div id="mobileFolders"></div>
       </section>
     </main>
@@ -37,24 +40,22 @@
   <section class="desktop-shell">
     <aside class="sidebar">
       <h1>雲端書籤</h1>
-      <label class="search sidebar-search"><span>⌕</span><input id="desktopSearch" autocomplete="off" placeholder="搜尋書籤…"><kbd>⌘K</kbd></label>
+      <label class="search sidebar-search"><span>⌕</span><input id="desktopSearch" autocomplete="off" placeholder="搜尋書籤…"></label>
       <nav id="desktopNav" class="sidebar-nav"></nav>
-      <div class="sidebar-label"><span>資料夾</span><button class="icon-btn small-icon" type="button" data-new-folder>＋</button></div>
+
+      <div class="sidebar-label"><span>資料夾</span><button class="text-btn" type="button" data-new-folder>＋</button></div>
       <nav id="desktopFolders" class="sidebar-folders"></nav>
-      <div class="sidebar-footer">
-        <button type="button" data-import>⇧ 匯入書籤</button>
-        <button type="button" data-export>⇩ 匯出書籤</button>
-        <button type="button" data-theme>◐ 配色主題</button>
-      </div>
+
+      <div class="sidebar-spacer"></div>
+      <button class="nav-item tools-entry" type="button" data-tools-menu><span>⇅</span><span class="nav-name">匯入 / 匯出</span><span></span></button>
     </aside>
 
     <main class="desktop-main">
       <header class="desktop-topbar">
         <div><h2 id="desktopTitle">全部書籤</h2><small id="desktopCount">0 個書籤</small></div>
-        <div class="desktop-actions">
-          <div class="segmented"><button type="button" data-layout="list">☰</button><button type="button" data-layout="grid" class="active">▦</button></div>
-          <button class="primary-btn" type="button" data-add>＋ 新增書籤</button>
-        </div>
+        <span class="desktop-spacer"></span>
+        <div class="segmented"><button type="button" data-layout="list">☰</button><button type="button" data-layout="grid" class="active">▦</button></div>
+        <button class="primary-btn" type="button" data-add>＋ 新增書籤</button>
       </header>
       <section id="desktopContent" class="desktop-content"></section>
     </main>
@@ -66,8 +67,8 @@
     <div class="sheet-grip"></div>
     <div class="sheet-head"><h2 id="sheetTitle">新增書籤</h2><button class="text-btn muted" type="button" data-close-sheet>取消</button></div>
     <input id="bookmarkId" type="hidden">
-    <label class="field"><span>網址</span><input id="bookmarkUrl" type="url" placeholder="https://example.com"></label>
-    <label class="field"><span>標題</span><input id="bookmarkName" placeholder="書籤名稱"></label>
+    <label class="field"><span>網址</span><input id="bookmarkUrl" type="url" placeholder="https://"></label>
+    <label class="field"><span>標題</span><input id="bookmarkName" placeholder="自動抓取標題"></label>
     <label class="field"><span>資料夾</span><select id="bookmarkFolder"></select></label>
     <div class="favorite-toggle-row"><span>加入我的最愛</span><button id="bookmarkFavorite" class="switch" type="button" aria-pressed="false"></button></div>
     <button id="saveBookmark" class="primary-btn sheet-save" type="button">儲存</button>
@@ -82,11 +83,12 @@
   <div id="contextMenu" class="context-menu hidden"></div>
   <div id="mobileOverflow" class="context-menu hidden"></div>
   <input id="importFile" class="hidden" type="file" accept="application/json,.json">
+
   <script src="state-v2.js"></script>
-<script src="render-mobile-v2.js"></script>
-<script src="render-desktop-v2.js"></script>
-<script src="actions-bookmark-v2.js"></script>
-<script src="actions-tools-v2.js"></script>
-<script src="init-v2.js"></script>
+  <script src="render-mobile-v2.js"></script>
+  <script src="render-desktop-v2.js"></script>
+  <script src="actions-bookmark-v2.js"></script>
+  <script src="actions-tools-v2.js"></script>
+  <script src="init-v2.js"></script>
 </body>
 </html>
