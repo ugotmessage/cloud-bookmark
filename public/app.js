@@ -1,5 +1,21 @@
-const STORAGE_KEY='cloud-bookmarks:v3';
+function routeScope(){
+  const url=new URL(location.href),params=url.searchParams;
+  const hadToken=Boolean(params.get('token'));
+  let token=params.get('token')||'';
+  let book=params.get('book')||'main';
+  if(!token){
+    const bytes=crypto.getRandomValues(new Uint8Array(20));
+    token=Array.from(bytes,b=>b.toString(16).padStart(2,'0')).join('');
+    params.set('token',token);
+  }
+  if(!params.get('book'))params.set('book',book);
+  if(url.search!==location.search)history.replaceState(null,'',url.pathname+'?'+params.toString()+url.hash);
+  return {token,book,hadToken};
+}
+const ROUTE=routeScope();
+const STORAGE_KEY=`cloud-bookmarks:v3:${ROUTE.token}:${ROUTE.book}`;
 const SETTINGS_KEY='cloud-bookmarks:settings';
+const API_STATE=`/api/state?token=${encodeURIComponent(ROUTE.token)}&book=${encodeURIComponent(ROUTE.book)}`;
 const COLORS=['#10a37f','#24292f','#d9593b','#4a6fd8','#7c3aed','#f59e0b','#0891b2','#be185d'];
 const PALETTES=[
   ['warm','Warm',['#fff','#b42318','#1c1917']],
@@ -57,8 +73,12 @@ function loadLocal(){
   try{
     const v3=JSON.parse(localStorage.getItem(STORAGE_KEY)||'null');
     if(v3)return normalizeData(v3);
-    const old=JSON.parse(localStorage.getItem('cb-v2-proto')||'null');
-    if(old)return normalizeData(old);
+    if(!ROUTE.hadToken){
+      const legacy=JSON.parse(localStorage.getItem('cloud-bookmarks:v3')||'null');
+      if(legacy)return normalizeData(legacy);
+      const old=JSON.parse(localStorage.getItem('cb-v2-proto')||'null');
+      if(old)return normalizeData(old);
+    }
   }catch{}
   return normalizeData(SAMPLE);
 }
@@ -70,7 +90,7 @@ let data=loadLocal();
 let S={folders:data.folders,marks:data.marks,open:new Set(['AI']),cur:'all',view:localStorage.getItem('cloud-bookmarks:view')||'grid',q:''};
 let editId=null,menuId=null,dragState=null,cloudReady=false,syncTimer=null,syncState='local';
 
-function localSnapshot(){return {version:3,folders:S.folders,marks:S.marks}}
+function localSnapshot(){return {version:3,token:ROUTE.token,book:ROUTE.book,folders:S.folders,marks:S.marks}}
 function persist({sync=true}={}){
   localStorage.setItem(STORAGE_KEY,JSON.stringify(localSnapshot()));
   localStorage.setItem('cloud-bookmarks:view',S.view);
@@ -84,14 +104,14 @@ function scheduleCloudSync(){
 }
 async function syncCloud(){
   try{
-    const r=await fetch('/api/state',{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify(localSnapshot())});
+    const r=await fetch(API_STATE,{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify(localSnapshot())});
     if(!r.ok)throw new Error(`HTTP ${r.status}`);
     setSyncState('cloud');
   }catch(e){console.warn('Cloud sync failed',e);setSyncState('error')}
 }
 async function hydrateCloud(){
   try{
-    const r=await fetch('/api/state',{headers:{accept:'application/json'}});
+    const r=await fetch(API_STATE,{headers:{accept:'application/json'}});
     if(r.status===503||r.status===404){setSyncState('local');return}
     if(!r.ok)throw new Error(`HTTP ${r.status}`);
     const remote=await r.json();cloudReady=true;
@@ -222,7 +242,11 @@ function openTheme(){hideContext();const s=settings(),mask=createThemePanel();ma
 function setTheme(key,value){const s=settings();s[key]=value;localStorage.setItem(SETTINGS_KEY,JSON.stringify(s));applyTheme();openTheme()}
 
 function openToolsMenu(anchor){
-  const menu=ensureContext();menu.innerHTML=`<button onclick="triggerImport();hideContext()">⇧ 匯入書籤</button><button onclick="downloadJSON();hideContext()">⇩ 匯出書籤</button><button onclick="openTheme()">◐ 配色主題</button>`;placeMenu(menu,anchor)
+  const menu=ensureContext();menu.innerHTML=`<button onclick="copyLibraryLink();hideContext()">🔗 複製此書籤庫連結</button><button onclick="triggerImport();hideContext()">⇧ 匯入書籤</button><button onclick="downloadJSON();hideContext()">⇩ 匯出書籤</button><button onclick="openTheme()">◐ 配色主題</button>`;placeMenu(menu,anchor)
+}
+async function copyLibraryLink(){
+  try{await navigator.clipboard.writeText(location.href);toast(`已複製 ${ROUTE.book} 書籤庫連結`)}
+  catch{prompt('複製此書籤庫連結',location.href)}
 }
 function triggerImport(){let input=document.getElementById('importInput');if(!input){input=document.createElement('input');input.id='importInput';input.type='file';input.accept='.json,application/json';input.hidden=true;input.onchange=()=>{if(input.files?.[0])importJSON(input.files[0]);input.value=''};document.body.appendChild(input)}input.click()}
 async function importJSON(file){
