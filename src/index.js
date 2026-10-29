@@ -19,6 +19,37 @@ function validState(body){
   return true;
 }
 
+async function ensureSchema(db){
+  await db.batch([
+    db.prepare(`CREATE TABLE IF NOT EXISTS folders (
+      user_id TEXT NOT NULL,
+      name TEXT NOT NULL,
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      created_at INTEGER NOT NULL,
+      updated_at INTEGER NOT NULL,
+      PRIMARY KEY (user_id, name)
+    )`),
+    db.prepare(`CREATE TABLE IF NOT EXISTS bookmarks (
+      user_id TEXT NOT NULL,
+      id TEXT NOT NULL,
+      name TEXT NOT NULL,
+      url TEXT NOT NULL,
+      folder TEXT,
+      favorite INTEGER NOT NULL DEFAULT 0,
+      added_date TEXT,
+      last_opened INTEGER NOT NULL DEFAULT 0,
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      created_at INTEGER NOT NULL,
+      updated_at INTEGER NOT NULL,
+      PRIMARY KEY (user_id, id)
+    )`),
+    db.prepare('CREATE INDEX IF NOT EXISTS idx_folders_user_sort ON folders(user_id, sort_order)'),
+    db.prepare('CREATE INDEX IF NOT EXISTS idx_bookmarks_user_sort ON bookmarks(user_id, sort_order)'),
+    db.prepare('CREATE INDEX IF NOT EXISTS idx_bookmarks_user_folder ON bookmarks(user_id, folder, sort_order)'),
+    db.prepare('CREATE INDEX IF NOT EXISTS idx_bookmarks_user_favorite ON bookmarks(user_id, favorite)')
+  ]);
+}
+
 async function readState(db,user){
   const [foldersResult,marksResult]=await db.batch([
     db.prepare('SELECT name FROM folders WHERE user_id = ? ORDER BY sort_order ASC').bind(user),
@@ -35,15 +66,26 @@ async function writeState(db,user,body){
   const now=Date.now();
   const folders=[...new Set(body.folders.map(x=>String(x).trim()).filter(Boolean))];
   const marks=body.marks.map((m,i)=>({
-    id:String(m.id||`b-${now}-${i}`),name:String(m.n??m.name??m.u??m.url??'Untitled'),url:String(m.u??m.url??'').replace(/^https?:\/\//i,''),folder:String(m.f??m.folder??''),favorite:(m.fav??m.favorite)?1:0,addedDate:String(m.d??m.addedDate??''),lastOpened:Number(m.lastOpened??m.recent??0)||0
+    id:String(m.id||`b-${now}-${i}`),
+    name:String(m.n??m.name??m.u??m.url??'Untitled'),
+    url:String(m.u??m.url??'').replace(/^https?:\/\//i,''),
+    folder:String(m.f??m.folder??''),
+    favorite:(m.fav??m.favorite)?1:0,
+    addedDate:String(m.d??m.addedDate??''),
+    lastOpened:Number(m.lastOpened??m.recent??0)||0
   })).filter(m=>m.url);
 
   const statements=[
     db.prepare('DELETE FROM bookmarks WHERE user_id = ?').bind(user),
     db.prepare('DELETE FROM folders WHERE user_id = ?').bind(user)
   ];
-  folders.forEach((name,i)=>statements.push(db.prepare('INSERT INTO folders (user_id,name,sort_order,created_at,updated_at) VALUES (?,?,?,?,?)').bind(user,name,i,now,now)));
-  marks.forEach((m,i)=>statements.push(db.prepare('INSERT INTO bookmarks (user_id,id,name,url,folder,favorite,added_date,last_opened,sort_order,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)').bind(user,m.id,m.name,m.url,m.folder||null,m.favorite,m.addedDate,m.lastOpened,i,now,now)));
+  folders.forEach((name,i)=>statements.push(
+    db.prepare('INSERT INTO folders (user_id,name,sort_order,created_at,updated_at) VALUES (?,?,?,?,?)').bind(user,name,i,now,now)
+  ));
+  marks.forEach((m,i)=>statements.push(
+    db.prepare('INSERT INTO bookmarks (user_id,id,name,url,folder,favorite,added_date,last_opened,sort_order,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)')
+      .bind(user,m.id,m.name,m.url,m.folder||null,m.favorite,m.addedDate,m.lastOpened,i,now,now)
+  ));
   await db.batch(statements);
   return {ok:true,folders:folders.length,marks:marks.length,updatedAt:now};
 }
@@ -59,6 +101,7 @@ export default {
     const user=await userId(ctx);
     if(!user)return json({error:'Authentication required'},401);
     try{
+      await ensureSchema(env.DB);
       if(request.method==='GET')return json(await readState(env.DB,user));
       if(request.method==='PUT'){
         const body=await request.json().catch(()=>null);
