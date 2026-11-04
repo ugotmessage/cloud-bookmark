@@ -38,19 +38,15 @@ Because the signed token wraps the original legacy token as its payload, the der
 
 Do not commit the signing secret to Git or Wrangler config.
 
-Production:
+Generate the secret once, then put the exact same value into both Production and Preview Base while they share the same D1 database:
 
 ```sh
-openssl rand -hex 32 | npx wrangler secret put TOKEN_SIGNING_SECRET
+SECRET="$(openssl rand -hex 32)"
+printf '%s' "$SECRET" | npx wrangler secret put TOKEN_SIGNING_SECRET
+printf '%s' "$SECRET" | npx wrangler preview base-config secret put TOKEN_SIGNING_SECRET
 ```
 
-Preview Base:
-
-```sh
-openssl rand -hex 32 | npx wrangler preview base-config secret put TOKEN_SIGNING_SECRET
-```
-
-For seamless testing/migration, Production and Preview should use the same signing secret while they share the same D1 database.
+Do not run the random generator separately for Production and Preview; existing signed tokens must verify in both environments if both point at the same library data.
 
 In the Cloudflare dashboard the equivalent setting is under the Worker's **Settings → Variables and secrets**. Configure both **Production** and **Previews Base**.
 
