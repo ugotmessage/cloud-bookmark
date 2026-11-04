@@ -197,7 +197,7 @@ function mobileRow(m){
 }
 function renderMobile(){
   const favs=S.marks.filter(m=>m.fav&&hit(m));
-  let h=`<header><h1>雲端書籤 <span class="sync-dot ${syncState}"></span></h1><span><button class="head-act" onclick="focusMobileSearch()">🔍</button><button class="head-act" onclick="openToolsMenu(this,event)">⋮</button></span></header>
+  let h=`<header><h1>雲端書籤 <span class="sync-dot ${syncState}"></span></h1><span><button class="head-act" onclick="focusMobileSearch()">🔍</button><button class="head-act tools-trigger" onclick="openToolsMenu(this,event)">⋮</button></span></header>
   <div class="search"><span>🔍</span><input id="mq" placeholder="搜尋書籤…" value="${esc(S.q)}" oninput="setQ(this.value)"></div>
   <div class="sec"><span style="color:#f59e0b">★</span> 我的最愛</div>
   <div class="fav-row">${favs.map(m=>`<button class="chip" onclick="goById('${esc(m.id)}')">${icon(m)}${esc(m.n)}<small>${esc(m.u)}</small></button>`).join('')||'<span class="empty">尚無最愛</span>'}</div>`;
@@ -448,7 +448,7 @@ function downloadJSON(){const blob=new Blob([JSON.stringify(localSnapshot(),null
 function exportJSON(){downloadJSON()}
 function toast(text){const el=document.createElement('div');el.className='toast';el.textContent=text;document.body.appendChild(el);setTimeout(()=>el.remove(),1600)}
 
-document.addEventListener('click',e=>{if(!e.target.closest('.context')&&!e.target.closest('.more')&&!e.target.closest('.head-act'))hideContext();document.querySelectorAll('.drag-over').forEach(x=>x.classList.remove('drag-over'))});
+document.addEventListener('click',e=>{if(!e.target.closest('.context')&&!e.target.closest('.more')&&!e.target.closest('.head-act')&&!e.target.closest('.tools-trigger'))hideContext();document.querySelectorAll('.drag-over').forEach(x=>x.classList.remove('drag-over'))});
 document.addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){e.preventDefault();(innerWidth>=768?$('dq'):$('mq'))?.focus()}if(e.key==='Escape'){hideContext();const t=document.getElementById('themeMask');if(t)t.hidden=true;closeSheet()}});
 matchMedia('(prefers-color-scheme:dark)').addEventListener?.('change',()=>{if(settings().mode==='system')applyTheme()});
 
