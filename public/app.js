@@ -1,21 +1,34 @@
-function routeScope(){
-  const url=new URL(location.href),params=url.searchParams;
-  const hadToken=Boolean(params.get('token'));
-  let token=params.get('token')||'';
-  let book=params.get('book')||'main';
-  if(!token){
-    const bytes=crypto.getRandomValues(new Uint8Array(20));
-    token=Array.from(bytes,b=>b.toString(16).padStart(2,'0')).join('');
-    params.set('token',token);
+const ACTIVE_TOKEN_KEY='cloud-bookmarks:active-token';
+const ACTIVE_BOOK_KEY='cloud-bookmarks:active-book';
+
+function recoverLegacyToken(book){
+  const prefix='cloud-bookmarks:v3:';
+  const suffix=':'+book;
+  const matches=[];
+  for(let i=0;i<localStorage.length;i++){
+    const key=localStorage.key(i)||'';
+    if(key.startsWith(prefix)&&key.endsWith(suffix)){
+      const token=key.slice(prefix.length,-suffix.length);
+      if(token&&token!=='pending')matches.push(token);
+    }
   }
-  if(!params.get('book'))params.set('book',book);
-  if(url.search!==location.search)history.replaceState(null,'',url.pathname+'?'+params.toString()+url.hash);
-  return {token,book,hadToken};
+  return matches.length===1?matches[0]:'';
 }
-const ROUTE=routeScope();
-const STORAGE_KEY=`cloud-bookmarks:v3:${ROUTE.token}:${ROUTE.book}`;
+function routeScope(){
+  const url=new URL(location.href);
+  const hash=new URLSearchParams(url.hash.replace(/^#/,''));
+  const suppliedToken=hash.get('token')||url.searchParams.get('token')||'';
+  const book=hash.get('book')||url.searchParams.get('book')||localStorage.getItem(ACTIVE_BOOK_KEY)||'main';
+  let token=suppliedToken||localStorage.getItem(ACTIVE_TOKEN_KEY)||recoverLegacyToken(book);
+  if(token)localStorage.setItem(ACTIVE_TOKEN_KEY,token);
+  localStorage.setItem(ACTIVE_BOOK_KEY,book);
+  if(url.hash||url.searchParams.has('token')||url.searchParams.has('book'))history.replaceState(null,'',url.pathname);
+  return {token,book,imported:Boolean(suppliedToken)};
+}
+let ROUTE=routeScope();
 const SETTINGS_KEY='cloud-bookmarks:settings';
-const API_STATE=`/api/state?token=${encodeURIComponent(ROUTE.token)}&book=${encodeURIComponent(ROUTE.book)}`;
+const API_STATE='/api/state';
+const storageKey=(token=ROUTE.token,book=ROUTE.book)=>`cloud-bookmarks:v3:${token||'pending'}:${book}`;
 const COLORS=['#10a37f','#24292f','#d9593b','#4a6fd8','#7c3aed','#f59e0b','#0891b2','#be185d'];
 const PALETTES=[
   ['warm','Warm',['#fff','#b42318','#1c1917']],
@@ -71,9 +84,9 @@ function normalizeData(raw){
 }
 function loadLocal(){
   try{
-    const v3=JSON.parse(localStorage.getItem(STORAGE_KEY)||'null');
+    const v3=JSON.parse(localStorage.getItem(storageKey())||'null');
     if(v3)return normalizeData(v3);
-    if(!ROUTE.hadToken){
+    if(!ROUTE.imported){
       const legacy=JSON.parse(localStorage.getItem('cloud-bookmarks:v3')||'null');
       if(legacy)return normalizeData(legacy);
       const old=JSON.parse(localStorage.getItem('cb-v2-proto')||'null');
@@ -88,11 +101,11 @@ function settings(){
 
 let data=loadLocal();
 let S={folders:data.folders,marks:data.marks,open:new Set(['AI']),cur:'all',view:localStorage.getItem('cloud-bookmarks:view')||'grid',q:''};
-let editId=null,menuId=null,dragState=null,cloudReady=false,syncTimer=null,syncState='local';
+let editId=null,menuId=null,dragState=null,cloudReady=false,syncTimer=null,syncState='local',tokenBootstrap=null;
 
-function localSnapshot(){return {version:3,token:ROUTE.token,book:ROUTE.book,folders:S.folders,marks:S.marks}}
+function localSnapshot(){return {version:3,book:ROUTE.book,folders:S.folders,marks:S.marks}}
 function persist({sync=true}={}){
-  localStorage.setItem(STORAGE_KEY,JSON.stringify(localSnapshot()));
+  localStorage.setItem(storageKey(),JSON.stringify(localSnapshot()));
   localStorage.setItem('cloud-bookmarks:view',S.view);
   if(sync)scheduleCloudSync();
 }
@@ -102,17 +115,51 @@ function scheduleCloudSync(){
   clearTimeout(syncTimer);setSyncState('syncing');
   syncTimer=setTimeout(syncCloud,450);
 }
+function apiHeaders(extra={}){
+  return {authorization:'Bearer '+ROUTE.token,'x-bookmark-book':ROUTE.book,...extra};
+}
+function adoptToken(next){
+  if(!next||next===ROUTE.token)return;
+  const oldKey=storageKey();
+  const snapshot=localStorage.getItem(oldKey);
+  ROUTE={...ROUTE,token:next,imported:false};
+  localStorage.setItem(ACTIVE_TOKEN_KEY,next);
+  localStorage.setItem(ACTIVE_BOOK_KEY,ROUTE.book);
+  if(snapshot&&!localStorage.getItem(storageKey()))localStorage.setItem(storageKey(),snapshot);
+}
+function maybeUpgradeToken(response){
+  const next=response.headers.get('x-library-token-upgrade');
+  if(next)adoptToken(next);
+}
+async function ensureToken(){
+  if(ROUTE.token)return ROUTE.token;
+  if(tokenBootstrap)return tokenBootstrap;
+  tokenBootstrap=(async()=>{
+    const r=await fetch('/api/token',{method:'POST',headers:{accept:'application/json'}});
+    if(!r.ok)throw new Error(`Token HTTP ${r.status}`);
+    const body=await r.json();
+    if(!body.token)throw new Error('Token missing');
+    adoptToken(body.token);
+    persist({sync:false});
+    return body.token;
+  })();
+  try{return await tokenBootstrap}finally{tokenBootstrap=null}
+}
 async function syncCloud(){
   try{
-    const r=await fetch(API_STATE,{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify(localSnapshot())});
+    await ensureToken();
+    const r=await fetch(API_STATE,{method:'PUT',headers:apiHeaders({'content-type':'application/json'}),body:JSON.stringify(localSnapshot())});
+    maybeUpgradeToken(r);
     if(!r.ok)throw new Error(`HTTP ${r.status}`);
     setSyncState('cloud');
   }catch(e){console.warn('Cloud sync failed',e);setSyncState('error')}
 }
 async function hydrateCloud(){
   try{
-    const r=await fetch(API_STATE,{headers:{accept:'application/json'}});
-    if(r.status===503||r.status===404){setSyncState('local');return}
+    await ensureToken();
+    const r=await fetch(API_STATE,{headers:apiHeaders({accept:'application/json'})});
+    maybeUpgradeToken(r);
+    if(r.status===503){setSyncState('local');return}
     if(!r.ok)throw new Error(`HTTP ${r.status}`);
     const remote=await r.json();cloudReady=true;
     if(remote.initialized){
@@ -123,6 +170,10 @@ async function hydrateCloud(){
     }
     setSyncState('cloud');
   }catch(e){console.warn('Cloud bootstrap unavailable',e);setSyncState('local')}
+}
+async function bootstrapToken(){
+  try{await ensureToken();await hydrateCloud()}
+  catch(e){console.warn('Token bootstrap unavailable',e);setSyncState('local')}
 }
 
 const icon=m=>`<span class="ico" style="background:${colorOf(m.n)}">${esc((m.n||'?')[0].toUpperCase())}</span>`;
@@ -382,8 +433,11 @@ function openToolsMenu(anchor){
   const menu=ensureContext();menu.innerHTML=`<button onclick="copyLibraryLink();hideContext()">🔗 複製此書籤庫連結</button><button onclick="triggerImport();hideContext()">⇧ 匯入書籤</button><button onclick="downloadJSON();hideContext()">⇩ 匯出書籤</button><button onclick="openTheme()">◐ 配色主題</button>`;placeMenu(menu,anchor)
 }
 async function copyLibraryLink(){
-  try{await navigator.clipboard.writeText(location.href);toast(`已複製 ${ROUTE.book} 書籤庫連結`)}
-  catch{prompt('複製此書籤庫連結',location.href)}
+  try{await ensureToken()}catch{return alert('目前無法建立安全書籤連結')}
+  const base=location.origin+location.pathname;
+  const link=base+'#token='+encodeURIComponent(ROUTE.token)+'&book='+encodeURIComponent(ROUTE.book);
+  try{await navigator.clipboard.writeText(link);toast(`已複製 ${ROUTE.book} 書籤庫秘密連結`)}
+  catch{prompt('複製此書籤庫秘密連結',link)}
 }
 function triggerImport(){let input=document.getElementById('importInput');if(!input){input=document.createElement('input');input.id='importInput';input.type='file';input.accept='.json,application/json';input.hidden=true;input.onchange=()=>{if(input.files?.[0])importJSON(input.files[0]);input.value=''};document.body.appendChild(input)}input.click()}
 async function importJSON(file){
@@ -397,4 +451,4 @@ document.addEventListener('click',e=>{if(!e.target.closest('.context')&&!e.targe
 document.addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){e.preventDefault();(innerWidth>=768?$('dq'):$('mq'))?.focus()}if(e.key==='Escape'){hideContext();const t=document.getElementById('themeMask');if(t)t.hidden=true;closeSheet()}});
 matchMedia('(prefers-color-scheme:dark)').addEventListener?.('change',()=>{if(settings().mode==='system')applyTheme()});
 
-applyTheme();render();hydrateCloud();
+applyTheme();render();bootstrapToken();
