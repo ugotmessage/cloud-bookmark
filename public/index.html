@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>雲端書籤</title>
+<style>
+:root{--bg:#fff;--bg2:#f5f5f4;--bd:#e7e5e4;--tx:#1c1917;--tx2:#78716c;--ac:#b42318;--acbg:#fde8e6;--r:12px}
+@media(prefers-color-scheme:dark){:root{--bg:#1c1917;--bg2:#292524;--bd:#3f3b38;--tx:#f5f5f4;--tx2:#a8a29e;--acbg:#4a1d19}}
+*{box-sizing:border-box;margin:0}
+body{font-family:-apple-system,"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;background:var(--bg);color:var(--tx);font-size:14px}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+input,select{font:inherit;color:var(--tx);background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:10px 12px;width:100%}
+.ico{width:32px;height:32px;border-radius:8px;display:grid;place-items:center;color:#fff;font-weight:700;flex:none}
+.star{color:var(--tx2);font-size:16px}.star.on{color:#f59e0b}
+.search{display:flex;gap:8px;align-items:center;background:var(--bg2);border-radius:10px;padding:0 12px}
+.search input{border:0;background:none;padding:10px 0}
+.btn{background:var(--ac);color:#fff;border-radius:8px;padding:9px 16px;font-weight:600}
+.empty{color:var(--tx2);padding:24px;text-align:center}
+
+/* ---------- Mobile ---------- */
+.m{display:block;max-width:480px;margin:0 auto;min-height:100vh;padding:16px 16px 90px}
+.d{display:none}
+.m header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.m h1{font-size:20px}
+.fav-row{display:flex;gap:8px;overflow-x:auto;padding:8px 0 14px}
+.chip{flex:none;width:76px;border:1px solid var(--bd);border-radius:10px;padding:8px 4px;text-align:center;font-size:11px}
+.chip .ico{margin:0 auto 4px}.chip small{display:block;color:var(--tx2);font-size:9px;overflow:hidden;text-overflow:ellipsis}
+.sec{margin-top:8px;font-weight:600;color:var(--tx2);display:flex;gap:6px;align-items:center;padding:6px 0}
+.fold{display:flex;align-items:center;gap:10px;width:100%;padding:14px 4px;border-top:1px solid var(--bd);font-weight:600;text-align:left}
+.fold .n{margin-left:auto;color:var(--tx2);font-weight:400}.fold .ch{transition:.2s;color:var(--tx2)}
+.fold.open .ch{transform:rotate(90deg)}
+.row{display:flex;gap:12px;align-items:center;padding:8px 4px}
+.row .t{flex:1;min-width:0}.row .t b{display:block;font-weight:600}.row .t small{color:var(--tx2)}
+.fab{position:fixed;right:max(20px,calc(50% - 220px));bottom:24px;width:52px;height:52px;border-radius:50%;background:var(--ac);color:#fff;font-size:28px;box-shadow:0 4px 12px #0004}
+
+/* ---------- Desktop ---------- */
+@media(min-width:768px){
+ .m{display:none}.fab{display:none}
+ .d{display:flex;height:100vh}
+ .side{width:240px;background:var(--bg2);border-right:1px solid var(--bd);padding:20px 12px;overflow-y:auto;flex:none}
+ .side h1{font-size:18px;padding:0 8px 14px}
+ .nav{display:flex;width:100%;gap:10px;align-items:center;padding:8px 10px;border-radius:8px;text-align:left}
+ .nav:hover{background:var(--bd)}.nav.act{background:var(--acbg);color:var(--ac);font-weight:600}
+ .nav .n{margin-left:auto;color:var(--tx2);font-size:12px}
+ .lbl{font-size:12px;color:var(--tx2);padding:16px 10px 6px;display:flex;justify-content:space-between}
+ .main{flex:1;padding:24px 32px;overflow-y:auto}
+ .bar{display:flex;align-items:center;gap:10px;margin-bottom:20px}
+ .bar h2{font-size:22px}.bar small{color:var(--tx2);display:block;font-size:13px}.bar .sp{flex:1}
+ .seg{display:flex;border:1px solid var(--bd);border-radius:8px;overflow:hidden}
+ .seg button{padding:7px 12px}.seg .on{background:var(--bg2);font-weight:700}
+ .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px}
+ .card{border:1px solid var(--bd);border-radius:var(--r);padding:16px;position:relative;display:flex;flex-direction:column;gap:12px;min-height:128px;transition:.15s}
+ .card:hover{box-shadow:0 4px 14px #0002;transform:translateY(-2px)}
+ .card .star{position:absolute;top:12px;right:12px}
+ .card b{display:block}.card small{color:var(--tx2)}
+ .card .ico{width:40px;height:40px;font-size:18px}
+ table{width:100%;border-collapse:collapse}
+ th{text-align:left;color:var(--tx2);font-weight:500;padding:8px;border-bottom:1px solid var(--bd);font-size:12px}
+ td{padding:12px 8px;border-bottom:1px solid var(--bd)}
+ td .ico{display:inline-grid;vertical-align:middle;margin-right:8px;width:26px;height:26px;font-size:12px}
+}
+
+/* ---------- Add sheet ---------- */
+.mask{position:fixed;inset:0;background:#0006;display:none;align-items:flex-end;justify-content:center;z-index:9}
+.mask.show{display:flex}
+.sheet{background:var(--bg);width:100%;max-width:480px;border-radius:20px 20px 0 0;padding:16px 20px 24px;display:flex;flex-direction:column;gap:12px}
+.sheet .grip{width:40px;height:4px;background:var(--bd);border-radius:2px;margin:0 auto}
+.sheet .hd{display:flex;justify-content:space-between;font-weight:700;font-size:16px}
+.sheet label{font-size:12px;color:var(--tx2);display:block;margin-bottom:4px}
+.tg{display:flex;justify-content:space-between;align-items:center}
+.sw{width:46px;height:26px;border-radius:13px;background:var(--bd);position:relative;transition:.2s}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;background:#fff;border-radius:50%;transition:.2s}
+.sw.on{background:var(--ac)}.sw.on::after{left:23px}
+@media(min-width:768px){.mask{align-items:center}.sheet{border-radius:16px;max-width:420px}.sheet .grip{display:none}}
+</style>
+<link rel="stylesheet" href="enhancements.css">
+</head>
+<body>
+
+<!-- Mobile -->
+<div class="m" id="m"></div>
+<button class="fab" onclick="openSheet()">＋</button>
+
+<!-- Desktop -->
+<div class="d">
+  <aside class="side">
+    <h1>雲端書籤</h1>
+    <div class="search" style="margin:0 4px 12px"><span>🔍</span><input id="dq" placeholder="搜尋書籤…" oninput="setQ(this.value)"></div>
+    <div id="dnav"></div>
+    <div class="lbl">資料夾 <button onclick="addFolder()">＋</button></div>
+    <div id="dfold"></div>
+    <div class="lbl"></div>
+    <button class="nav" onclick="openToolsMenu(this)">⇅ 匯入 / 匯出</button>
+  </aside>
+  <main class="main">
+    <div class="bar">
+      <div><h2 id="dtitle"></h2><small id="dcount"></small></div>
+      <span class="sp"></span>
+      <div class="seg"><button id="vl" onclick="setView('list')">☰</button><button id="vg" onclick="setView('grid')">▦</button></div>
+      <button class="btn" onclick="openSheet()">＋ 新增書籤</button>
+    </div>
+    <div id="dcontent"></div>
+  </main>
+</div>
+
+<!-- Add Bookmark (Bottom Sheet) -->
+<div class="mask" id="mask" onclick="if(event.target===this)closeSheet()">
+  <div class="sheet">
+    <div class="grip"></div>
+    <div class="hd"><span>新增書籤</span><button style="font-weight:400;color:var(--tx2)" onclick="closeSheet()">取消</button></div>
+    <div><label>網址</label><input id="fu" placeholder="https://" oninput="autoTitle()"></div>
+    <div><label>標題</label><input id="ft" placeholder="自動抓取標題"></div>
+    <div><label>資料夾</label><select id="ff"></select></div>
+    <div class="tg"><span>加入我的最愛</span><button class="sw" id="fs" onclick="this.classList.toggle('on')"></button></div>
+    <button class="btn" style="padding:13px" onclick="save()">儲存</button>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.7/Sortable.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
