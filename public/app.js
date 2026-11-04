@@ -197,7 +197,7 @@ function mobileRow(m){
 }
 function renderMobile(){
   const favs=S.marks.filter(m=>m.fav&&hit(m));
-  let h=`<header><h1>雲端書籤 <span class="sync-dot ${syncState}"></span></h1><span><button class="head-act" onclick="focusMobileSearch()">🔍</button><button class="head-act" onclick="openToolsMenu(this)">⋮</button></span></header>
+  let h=`<header><h1>雲端書籤 <span class="sync-dot ${syncState}"></span></h1><span><button class="head-act" onclick="focusMobileSearch()">🔍</button><button class="head-act" onclick="openToolsMenu(this,event)">⋮</button></span></header>
   <div class="search"><span>🔍</span><input id="mq" placeholder="搜尋書籤…" value="${esc(S.q)}" oninput="setQ(this.value)"></div>
   <div class="sec"><span style="color:#f59e0b">★</span> 我的最愛</div>
   <div class="fav-row">${favs.map(m=>`<button class="chip" onclick="goById('${esc(m.id)}')">${icon(m)}${esc(m.n)}<small>${esc(m.u)}</small></button>`).join('')||'<span class="empty">尚無最愛</span>'}</div>`;
@@ -429,7 +429,8 @@ function applyTheme(){const s=settings(),dark=matchMedia('(prefers-color-scheme:
 function openTheme(){hideContext();const s=settings(),mask=createThemePanel();mask.innerHTML=`<div class="theme-panel"><div class="theme-head"><b>配色主題</b><button onclick="document.getElementById('themeMask').hidden=true">完成</button></div><div class="theme-modes">${[['system','跟隨系統'],['light','淺色'],['dark','深色']].map(([k,l])=>`<button class="${s.mode===k?'on':''}" onclick="setTheme('mode','${k}')">${l}</button>`).join('')}</div><div class="theme-grid">${PALETTES.map(([k,l,cs])=>`<button class="theme-choice ${s.palette===k?'on':''}" onclick="setTheme('palette','${k}')"><span class="swatches">${cs.map(c=>`<i style="background:${c}"></i>`).join('')}</span><b>${l}</b><small>Theme preset</small></button>`).join('')}</div></div>`;mask.hidden=false}
 function setTheme(key,value){const s=settings();s[key]=value;localStorage.setItem(SETTINGS_KEY,JSON.stringify(s));applyTheme();openTheme()}
 
-function openToolsMenu(anchor){
+function openToolsMenu(anchor,event){
+  event?.stopPropagation();
   const menu=ensureContext();menu.innerHTML=`<button onclick="copyLibraryLink();hideContext()">🔗 複製此書籤庫連結</button><button onclick="triggerImport();hideContext()">⇧ 匯入書籤</button><button onclick="downloadJSON();hideContext()">⇩ 匯出書籤</button><button onclick="openTheme()">◐ 配色主題</button>`;placeMenu(menu,anchor)
 }
 async function copyLibraryLink(){
