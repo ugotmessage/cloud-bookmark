@@ -16,12 +16,56 @@
       "migrations_dir": "migrations"
     }
   ],
+  "ratelimits": [
+    {
+      "name": "TOKEN_ISSUE_LIMIT",
+      "namespace_id": "4286101",
+      "simple": { "limit": 12, "period": 60 }
+    },
+    {
+      "name": "INVALID_TOKEN_LIMIT",
+      "namespace_id": "4286102",
+      "simple": { "limit": 30, "period": 60 }
+    },
+    {
+      "name": "LEGACY_TOKEN_LIMIT",
+      "namespace_id": "4286103",
+      "simple": { "limit": 12, "period": 60 }
+    },
+    {
+      "name": "VALID_TOKEN_LIMIT",
+      "namespace_id": "4286104",
+      "simple": { "limit": 300, "period": 60 }
+    }
+  ],
   "previews": {
     "d1_databases": [
       {
         "binding": "DB",
         "database_name": "cloud-bookmark-db",
         "database_id": "e662fca5-4b35-460f-b2a1-5577fa7c23b0"
+      }
+    ],
+    "ratelimits": [
+      {
+        "name": "TOKEN_ISSUE_LIMIT",
+        "namespace_id": "4286201",
+        "simple": { "limit": 12, "period": 60 }
+      },
+      {
+        "name": "INVALID_TOKEN_LIMIT",
+        "namespace_id": "4286202",
+        "simple": { "limit": 30, "period": 60 }
+      },
+      {
+        "name": "LEGACY_TOKEN_LIMIT",
+        "namespace_id": "4286203",
+        "simple": { "limit": 12, "period": 60 }
+      },
+      {
+        "name": "VALID_TOKEN_LIMIT",
+        "namespace_id": "4286204",
+        "simple": { "limit": 300, "period": 60 }
       }
     ]
   }
