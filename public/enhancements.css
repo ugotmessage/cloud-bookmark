@@ -147,3 +147,45 @@ body.sorting-folder .folder-nav:not(.sortable-chosen){
   .sortable-chosen{box-shadow:0 8px 22px #0003!important}
   .sortable-drag{border-radius:10px}
 }
+
+
+/* Bookmark cards: constrain long URLs and titles inside the card bounds. */
+@media (min-width:768px){
+  .grid { min-width:0; }
+  .grid .card {
+    min-width:0;
+    overflow:hidden;
+  }
+  .grid .card > div:not(.folder-drop-host) {
+    min-width:0;
+    max-width:100%;
+  }
+  .grid .card b,
+  .grid .card small {
+    min-width:0;
+    max-width:100%;
+    overflow:hidden;
+    overflow-wrap:anywhere;
+    word-break:break-word;
+  }
+  .grid .card b {
+    display:-webkit-box;
+    -webkit-box-orient:vertical;
+    -webkit-line-clamp:2;
+    line-clamp:2;
+  }
+  .grid .card small {
+    display:-webkit-box;
+    -webkit-box-orient:vertical;
+    -webkit-line-clamp:2;
+    line-clamp:2;
+    line-height:1.5;
+  }
+  .desktop-bookmark-sortable td { overflow-wrap:anywhere; }
+}
+.row .t b,
+.row .t small {
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
